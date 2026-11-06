@@ -1,0 +1,81 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Base de conhecimento{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <a class="btn btn-primary btn-block" href="{% url 'chat:home' %}">+ Nova conversa</a>
+
+      <section class="sidebar-section">
+        <h2>Conversas</h2>
+        <ul class="nav-list" id="conversation-list">
+          {% for item in sidebar_conversations %}
+            <li><a href="{{ item.get_absolute_url }}"{% if item.pk == conversation.pk %} class="active"{% endif %}>{{ item.title }}</a></li>
+          {% empty %}
+            <li class="empty">Nenhuma conversa ainda</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="sidebar-section">
+        <h2>Tópicos</h2>
+        {% if user.is_staff %}
+          <a class="btn btn-ghost btn-block" href="{% url 'knowledge:topic_create' %}">+ Novo tópico</a>
+        {% endif %}
+        <ul class="nav-list">
+          {% for item in sidebar_topics %}
+            <li>
+              {% if user.is_staff %}
+                <a href="{{ item.get_absolute_url }}"{% if item.pk == topic.pk %} class="active"{% endif %}>
+                  <span>{{ item.name }}</span><span class="count">{{ item.document_count }}</span>
+                </a>
+              {% else %}
+                <span class="nav-item"><span>{{ item.name }}</span><span class="count">{{ item.document_count }}</span></span>
+              {% endif %}
+            </li>
+          {% empty %}
+            <li class="empty">Nenhum tópico</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <footer class="sidebar-footer">
+        <span class="user">{{ user.get_username }}</span>
+        {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="link-button">Sair</button>
+        </form>
+      </footer>
+    </aside>
+
+    <main class="main">
+      <button type="button" class="sidebar-toggle" aria-label="Abrir menu" aria-controls="sidebar">☰</button>
+      {% if messages %}
+        <div class="flash-list">
+          {% for message in messages %}<div class="flash flash-{{ message.tags }}">{{ message }}</div>{% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    document.querySelector('.sidebar-toggle').addEventListener('click', (event) => {
+      event.stopPropagation();
+      document.body.classList.toggle('sidebar-open');
+    });
+    document.querySelector('.main').addEventListener('click', () => document.body.classList.remove('sidebar-open'));
+    document.addEventListener('submit', (event) => {
+      const message = event.target.dataset.confirm;
+      if (message && !window.confirm(message)) event.preventDefault();
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

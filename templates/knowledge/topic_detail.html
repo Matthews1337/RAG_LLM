@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ topic.name }}{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header"><h1>{{ topic.name }}</h1></header>
+  <div class="page-body">
+    <section class="card">
+      <h2>Documentos</h2>
+      <form method="post" enctype="multipart/form-data" class="upload">
+        {% csrf_token %}
+        <input type="hidden" name="upload" value="1">
+        {% include "knowledge/_field.html" with field=upload_form.files %}
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </form>
+
+      {% if documents %}
+        <div class="table-wrap">
+          <table class="table" id="documents" data-status-url="{% url 'knowledge:topic_status' topic.slug %}">
+            <thead>
+              <tr><th>Arquivo</th><th>Status</th><th>Trechos</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for document in documents %}
+                <tr data-id="{{ document.pk }}">
+                  <td><a href="{{ document.file.url }}" target="_blank" rel="noopener">{{ document.title }}</a></td>
+                  <td>
+                    <span class="status-badge" data-status="{{ document.status }}">{{ document.get_status_display }}</span>
+                    <small class="field-error document-error">{{ document.error }}</small>
+                  </td>
+                  <td class="chunk-count">{{ document.chunk_count }}</td>
+                  <td class="row-actions">
+                    <form method="post" action="{% url 'knowledge:document_reprocess' document.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-ghost btn-sm">Reprocessar</button>
+                    </form>
+                    <form method="post" action="{% url 'knowledge:document_delete' document.pk %}" data-confirm="Excluir o documento &quot;{{ document.title }}&quot;?">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-ghost btn-sm btn-danger-text">Excluir</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted">Nenhum documento ainda.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Dados do tópico</h2>
+      <form method="post">
+        {% csrf_token %}
+        {% include "knowledge/_field.html" with field=form.name %}
+        {% include "knowledge/_field.html" with field=form.description %}
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card danger-zone">
+      <h2>Excluir tópico</h2>
+      <p class="muted">Remove o tópico, os documentos e todos os vetores dele.</p>
+      <form method="post" action="{% url 'knowledge:topic_delete' topic.slug %}" data-confirm="Excluir o tópico &quot;{{ topic.name }}&quot; e todos os documentos dele?">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Excluir tópico</button>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/topic.js' %}"></script>
+{% endblock %}

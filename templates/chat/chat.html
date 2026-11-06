@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ conversation.title|default:"Nova conversa" }}{% endblock %}
+
+{% block content %}
+<div class="chat" id="chat" data-send-url="{% url 'chat:send' %}" data-conversation-id="{{ conversation.pk|default:'' }}">
+  <header class="page-header">
+    <h1 id="chat-title">{{ conversation.title|default:"Nova conversa" }}</h1>
+    <div class="header-actions">
+      {% if models %}
+        <select id="model-select" aria-label="Modelo de linguagem">
+          {% for model in models %}
+            <option value="{{ model.id }}"{% if model.id == default_model %} selected{% endif %}>{{ model.provider }} · {{ model.name }}</option>
+          {% endfor %}
+        </select>
+      {% endif %}
+      {% if conversation %}
+        <form method="post" action="{% url 'chat:conversation_delete' conversation.pk %}" data-confirm="Excluir esta conversa?">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm">Excluir</button>
+        </form>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="messages" id="messages">
+    {% if not history %}
+      <div class="empty-state" id="empty-state">
+        <h2>Pergunte sobre os documentos</h2>
+        {% if has_topics %}
+          <p>A IA identifica o tópico da pergunta e busca a resposta nos documentos dele. Se a pergunta servir para mais de um tópico, ela pergunta qual você quer.</p>
+          <div class="chips">
+            {% for item in sidebar_topics %}<span class="badge">{{ item.name }}</span>{% endfor %}
+          </div>
+        {% elif user.is_staff %}
+          <p>Ainda não há tópicos. <a href="{% url 'knowledge:topic_create' %}">Crie o primeiro tópico</a> e envie documentos para ele.</p>
+        {% else %}
+          <p>Ainda não há tópicos. Peça a um administrador para cadastrar tópicos e documentos.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <form class="composer" id="composer">
+    {% csrf_token %}
+    {% if models %}
+      <textarea name="message" rows="1" placeholder="Faça uma pergunta..." aria-label="Mensagem"></textarea>
+      <button type="submit" class="btn btn-primary">Enviar</button>
+    {% else %}
+      <p class="notice">Nenhum LLM disponível. Configure LLM_MODELS e as chaves de API no arquivo .env.</p>
+    {% endif %}
+  </form>
+</div>
+{{ history|json_script:"initial-messages" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}

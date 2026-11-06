@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Novo tópico{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header"><h1>Novo tópico</h1></header>
+  <div class="page-body">
+    <form method="post" class="card">
+      {% csrf_token %}
+      {% include "knowledge/_field.html" with field=form.name %}
+      {% include "knowledge/_field.html" with field=form.description %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Criar tópico</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

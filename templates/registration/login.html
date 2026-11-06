@@ -1,0 +1,21 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="auth">
+  <form method="post" class="card auth-card">
+    {% csrf_token %}
+    <h1>Base de conhecimento</h1>
+    <p class="muted">Entre para conversar com os documentos.</p>
+    {% if form.non_field_errors %}<p class="field-error">Usuário ou senha incorretos.</p>{% endif %}
+    {% include "knowledge/_field.html" with field=form.username %}
+    {% include "knowledge/_field.html" with field=form.password %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+  </form>
+</body>
+</html>
